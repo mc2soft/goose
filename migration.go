@@ -45,10 +45,11 @@ func (m *Migration) Up(db *sql.DB) error {
 
 // Down runs a down migration.
 func (m *Migration) Down(db *sql.DB) error {
+	fmt.Print(filepath.Base(m.Source), " ")
 	if err := m.run(db, false); err != nil {
 		return err
 	}
-	fmt.Println("OK   ", filepath.Base(m.Source))
+	fmt.Println("OK")
 	return nil
 }
 
