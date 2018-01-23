@@ -16,10 +16,10 @@ func Create(db *sql.DB, dir, name, migrationType string) error {
 	}
 
 	// Initial version.
-	version := "00001"
+	version := "0001"
 
 	if last, err := migrations.Last(); err == nil {
-		version = fmt.Sprintf("%05v", last.Version+1)
+		version = fmt.Sprintf("%04v", last.Version+1)
 	}
 
 	filename := fmt.Sprintf("%v_%v.%v", version, name, migrationType)
@@ -65,7 +65,7 @@ var sqlMigrationTemplate = template.Must(template.New("goose.sql-migration").Par
 -- SQL in this section is executed when the migration is rolled back.
 `))
 
-var goSQLMigrationTemplate = template.Must(template.New("goose.go-migration").Parse(`package migration
+var goSQLMigrationTemplate = template.Must(template.New("goose.go-migration").Parse(`package migrations
 
 import (
 	"database/sql"
@@ -78,11 +78,19 @@ func init() {
 
 func Up{{.}}(tx *sql.Tx) error {
 	// This code is executed when the migration is applied.
+	_, err := tx.Exec("-- SQL goes here")
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func Down{{.}}(tx *sql.Tx) error {
 	// This code is executed when the migration is rolled back.
+	_, err := tx.Exec("-- SQL goes here")
+	if err != nil {
+		return err
+	}
 	return nil
 }
 `))

@@ -122,9 +122,12 @@ func getSQLStatements(r io.Reader, direction bool) (stmts []string, tx bool) {
 		log.Fatalf("ERROR: Unexpected unfinished SQL query: %s. Missing a semicolon?\n", bufferRemaining)
 	}
 
-	if upSections == 0 && downSections == 0 {
-		log.Fatalf(`ERROR: no Up/Down annotations found, so no statements were executed.
-			See https://bitbucket.org/liamstask/goose/overview for details.`)
+	if upSections == 0 {
+		log.Fatalf(`ERROR: no Up annotations found`)
+	}
+
+	if downSections == 0 {
+		log.Fatalf(`ERROR: no Down annotations found`)
 	}
 
 	return
