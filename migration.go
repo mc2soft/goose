@@ -35,10 +35,11 @@ func (m *Migration) String() string {
 
 // Up runs an up migration.
 func (m *Migration) Up(db *sql.DB) error {
+	fmt.Print(filepath.Base(m.Source), " ")
 	if err := m.run(db, true); err != nil {
 		return err
 	}
-	fmt.Println("OK   ", filepath.Base(m.Source))
+	fmt.Println("OK")
 	return nil
 }
 

@@ -115,11 +115,11 @@ func getSQLStatements(r io.Reader, direction bool) (stmts []string, tx bool) {
 
 	// diagnose likely migration script errors
 	if ignoreSemicolons {
-		log.Println("WARNING: saw '-- +goose StatementBegin' with no matching '-- +goose StatementEnd'")
+		log.Fatalf("ERROR: saw '-- +goose StatementBegin' with no matching '-- +goose StatementEnd'")
 	}
 
 	if bufferRemaining := strings.TrimSpace(buf.String()); len(bufferRemaining) > 0 {
-		log.Printf("WARNING: Unexpected unfinished SQL query: %s. Missing a semicolon?\n", bufferRemaining)
+		log.Fatalf("ERROR: Unexpected unfinished SQL query: %s. Missing a semicolon?\n", bufferRemaining)
 	}
 
 	if upSections == 0 && downSections == 0 {
