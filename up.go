@@ -5,61 +5,57 @@ import (
 	"fmt"
 )
 
-// UpTo migrates up to a specific version.
-func UpTo(db *sql.DB, dir string, version int64) error {
-	migrations, err := CollectMigrations(dir, minVersion, version)
-	if err != nil {
-		return err
-	}
-
-	for {
-		current, err := GetDBVersion(db)
-		if err != nil {
-			return err
-		}
-
-		next, err := migrations.Next(current)
-		if err != nil {
-			if err == ErrNoNextVersion {
-				fmt.Printf("goose: no migrations to run. current version: %d\n", current)
-				return nil
-			}
-			return err
-		}
-
-		if err = next.Up(db); err != nil {
-			return err
-		}
-	}
-}
-
 // Up applies all available migrations.
 func Up(db *sql.DB, dir string) error {
-	return UpTo(db, dir, maxVersion)
+	return UpMissing(db, dir, false)
 }
 
 // UpByOne migrates up by a single version.
 func UpByOne(db *sql.DB, dir string) error {
-	migrations, err := CollectMigrations(dir, minVersion, maxVersion)
+	return UpMissing(db, dir, true)
+}
+
+// UpMissing migrates all missing migrations
+func UpMissing(db *sql.DB, dir string, onlyOne bool) error {
+	migrations, err := MissingMigrations(db, dir)
 	if err != nil {
 		return err
 	}
 
-	currentVersion, err := GetDBVersion(db)
-	if err != nil {
-		return err
+	if len(migrations) == 0 {
+		fmt.Printf("goose: no migrations to run\n")
 	}
 
-	next, err := migrations.Next(currentVersion)
-	if err != nil {
-		if err == ErrNoNextVersion {
-			fmt.Printf("goose: no migrations to run. current version: %d\n", currentVersion)
+	for _, migration := range migrations {
+		if err = migration.Up(db); err != nil {
+			return err
 		}
+		if onlyOne {
+			break
+		}
+	}
+
+	return nil
+}
+
+// UpTo migrates up to a specific version.
+func UpTo(db *sql.DB, dir string, version int64) error {
+	migrations, err := MissingMigrations(db, dir)
+	if err != nil {
 		return err
 	}
 
-	if err = next.Up(db); err != nil {
-		return err
+	if len(migrations) == 0 {
+		fmt.Printf("goose: no migrations to run\n")
+	}
+
+	for _, migration := range migrations {
+		if migration.Version > version {
+			break
+		}
+		if err = migration.Up(db); err != nil {
+			return err
+		}
 	}
 
 	return nil

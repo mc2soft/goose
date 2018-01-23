@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/pressly/goose"
+	"github.com/mc2soft/goose"
 
 	// Init DB drivers.
 	_ "github.com/go-sql-driver/mysql"
@@ -17,8 +17,9 @@ import (
 )
 
 var (
-	flags = flag.NewFlagSet("goose", flag.ExitOnError)
-	dir   = flags.String("dir", ".", "directory with migration files")
+	flags       = flag.NewFlagSet("goose", flag.ExitOnError)
+	dir         = flags.String("dir", ".", "directory with migration files")
+	missingOnly = flags.Bool("missing-only", false, "for status command - find out only migrations, missing from the current DB")
 )
 
 func main() {
@@ -28,7 +29,7 @@ func main() {
 	args := flags.Args()
 
 	if len(args) > 1 && args[0] == "create" {
-		if err := goose.Run("create", nil, *dir, args[1:]...); err != nil {
+		if err := goose.Run("create", nil, *dir, *missingOnly, args[1:]...); err != nil {
 			log.Fatalf("goose run: %v", err)
 		}
 		return
@@ -75,7 +76,7 @@ func main() {
 		arguments = append(arguments, args[3:]...)
 	}
 
-	if err := goose.Run(command, db, *dir, arguments...); err != nil {
+	if err := goose.Run(command, db, *dir, *missingOnly, arguments...); err != nil {
 		log.Fatalf("goose run: %v", err)
 	}
 }
@@ -107,17 +108,22 @@ Examples:
     goose redshift "postgres://user:password@qwerty.us-east-1.redshift.amazonaws.com:5439/db" status
 
 Options:
+    -dir string
+        directory with migration files (default ".")
+    -missing-only
+        for status command - find out only migrations, missing from the current DB
 `
 
 	usageCommands = `
 Commands:
     up                   Migrate the DB to the most recent version available
+    up-by-one            Migrate up by a single version
     up-to VERSION        Migrate the DB to a specific VERSION
     down                 Roll back the version by 1
     down-to VERSION      Roll back to a specific VERSION
     redo                 Re-run the latest migration
     reset                Roll back all migrations
-    status               Dump the migration status for the current DB
+    status               Dump the migration status for the current DB. Use [-missing-only] option to find out only migrations, missing from the current DB
     version              Print the current version of the database
     create NAME [sql|go] Creates new migration file with next version
 `

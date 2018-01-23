@@ -14,7 +14,7 @@ var (
 )
 
 // Run runs a goose command.
-func Run(command string, db *sql.DB, dir string, args ...string) error {
+func Run(command string, db *sql.DB, dir string, missingOnly bool, args ...string) error {
 	switch command {
 	case "up":
 		if err := Up(db, dir); err != nil {
@@ -73,8 +73,14 @@ func Run(command string, db *sql.DB, dir string, args ...string) error {
 			return err
 		}
 	case "status":
-		if err := Status(db, dir); err != nil {
-			return err
+		if missingOnly {
+			if err := StatusMissing(db, dir); err != nil {
+				return err
+			}
+		} else {
+			if err := Status(db, dir); err != nil {
+				return err
+			}
 		}
 	case "version":
 		if err := Version(db, dir); err != nil {
