@@ -41,7 +41,7 @@ func Run(command string, db *sql.DB, dir string, missingOnly bool, args ...strin
 			return fmt.Errorf("create must be of form: goose [OPTIONS] DRIVER DBSTRING create NAME [go|sql]")
 		}
 
-		migrationType := "go"
+		migrationType := "sql"
 		if len(args) == 2 {
 			migrationType = args[1]
 		}
