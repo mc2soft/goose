@@ -31,6 +31,8 @@ func SetDialect(d string) error {
 		dialect = &Sqlite3Dialect{}
 	case "redshift":
 		dialect = &RedshiftDialect{}
+	case "clickhouse":
+		dialect = &Clickhouse{}
 	default:
 		return fmt.Errorf("%q: unknown dialect", d)
 	}
@@ -154,5 +156,33 @@ func (rs RedshiftDialect) dbVersionQuery(db *sql.DB) (*sql.Rows, error) {
 		return nil, err
 	}
 
+	return rows, err
+}
+
+////////////////////////////
+// Clickhouse
+////////////////////////////
+
+// Clickhouse struct.
+type Clickhouse struct{}
+
+func (c Clickhouse) createVersionTableSQL() string {
+	return `CREATE TABLE goose_db_version (
+			version_id Int64,
+			is_applied UInt8,
+			date       Date     default today(),
+			tstamp     DateTime default now()
+		) Engine = MergeTree(date, (date), 8192)`
+}
+
+func (c Clickhouse) insertVersionSQL() string {
+	return "INSERT INTO goose_db_version (version_id, is_applied) VALUES (?, ?)"
+}
+
+func (c Clickhouse) dbVersionQuery(db *sql.DB) (*sql.Rows, error) {
+	rows, err := db.Query("SELECT version_id, is_applied FROM goose_db_version ORDER BY version_id DESC, tstamp DESC")
+	if err != nil {
+		return nil, err
+	}
 	return rows, err
 }
