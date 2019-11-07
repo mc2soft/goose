@@ -11,6 +11,7 @@ import (
 
 	// Init DB drivers.
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/kshvakov/clickhouse"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 	_ "github.com/ziutek/mymysql/godrv"
@@ -48,7 +49,7 @@ func main() {
 	driver, dbstring, command := args[0], args[1], args[2]
 
 	switch driver {
-	case "postgres", "mysql", "sqlite3", "redshift":
+	case "postgres", "mysql", "sqlite3", "redshift", "clickhouse":
 		if err := goose.SetDialect(driver); err != nil {
 			log.Fatal(err)
 		}
@@ -95,6 +96,7 @@ Drivers:
     mysql
     sqlite3
     redshift
+    clickhouse
 
 Examples:
     goose sqlite3 ./foo.db status
@@ -106,6 +108,7 @@ Examples:
     goose postgres "user=postgres dbname=postgres sslmode=disable" status
     goose mysql "user:password@/dbname" status
     goose redshift "postgres://user:password@qwerty.us-east-1.redshift.amazonaws.com:5439/db" status
+    goose clickhouse "tcp://127.0.0.1:9000?username=user&password=password&database=dbname" status
 
 Options:
     -dir string
